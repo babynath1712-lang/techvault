@@ -1,33 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HiMail, HiLockClosed, HiEye, HiEyeOff, HiLightningBolt, HiShieldCheck } from 'react-icons/hi';
+import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
 import { useAuthContext } from '../../context/AuthContext';
 import { validateLogin, hasErrors } from '../../utils/validators';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
-
-const QUICK_LOGIN = [
-  {
-    label: 'Login as User',
-    icon: <HiLightningBolt size={15} />,
-    email: 'user@demo.com',
-    password: 'Demo@1234',
-    color: '#10b981',
-    bg: 'rgba(16,185,129,0.08)',
-    border: 'rgba(16,185,129,0.25)',
-    badge: '👤 User',
-  },
-  {
-    label: 'Login as Admin',
-    icon: <HiShieldCheck size={15} />,
-    email: 'admin@demo.com',
-    password: 'Admin@1234',
-    color: '#6366f1',
-    bg: 'rgba(99,102,241,0.08)',
-    border: 'rgba(99,102,241,0.25)',
-    badge: '🛡️ Admin',
-  },
-];
 
 const Login = () => {
   const navigate = useNavigate();
@@ -45,16 +22,7 @@ const Login = () => {
     if (hasErrors(errs)) return;
     const res = await login(form);
     if (res.success) {
-      // Admin goes to admin dashboard, user goes to home
-      navigate(form.email === 'admin@demo.com' ? '/admin' : '/');
-    }
-  };
-
-  const handleQuickLogin = async (creds) => {
-    setForm({ email: creds.email, password: creds.password });
-    const res = await login({ email: creds.email, password: creds.password });
-    if (res.success) {
-      navigate(creds.email === 'admin@demo.com' ? '/admin' : '/');
+      navigate('/');
     }
   };
 
@@ -65,66 +33,7 @@ const Login = () => {
         Sign in to your TechVault account
       </p>
 
-      {/* ── Quick Login Buttons ── */}
-      <div style={{ marginBottom: 24 }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-          Quick Demo Login
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          {QUICK_LOGIN.map((q) => (
-            <button
-              key={q.label}
-              type="button"
-              onClick={() => handleQuickLogin(q)}
-              disabled={loading}
-              style={{
-                display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-                gap: 6, padding: '14px 16px',
-                background: q.bg,
-                border: `1.5px solid ${q.border}`,
-                borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease', textAlign: 'left',
-                opacity: loading ? 0.6 : 1,
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.borderColor = q.color + '60';
-                e.currentTarget.style.boxShadow = `0 8px 24px ${q.color}20`;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = q.border;
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ color: q.color }}>{q.icon}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: q.color }}>{q.label}</span>
-              </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span>📧 {q.email}</span>
-                <span>🔑 {q.password}</span>
-              </div>
-              <span style={{
-                marginTop: 4, padding: '2px 10px', borderRadius: 20,
-                background: q.color + '18', color: q.color,
-                fontSize: 11, fontWeight: 700,
-              }}>
-                {q.badge}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Divider ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>or sign in manually</span>
-        <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-      </div>
-
-      {/* ── Manual Form ── */}
+      {/* ── Login Form ── */}
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <Input
           label="Email Address" type="email" id="login-email"
