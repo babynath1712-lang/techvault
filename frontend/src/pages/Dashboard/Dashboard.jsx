@@ -1,28 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HiHeart, HiShoppingCart, HiClock, HiTruck } from 'react-icons/hi';
 import { useAuthContext } from '../../context/AuthContext';
 import { formatPriceShort } from '../../utils/helpers';
 import ProductCard from '../../components/ProductCard';
+import { orderService } from '../../services/orderService';
 
-const MOCK_ORDERS = [
-  { id: 'ORD-001', product: 'iPhone 16', price: 89999, status: 'Delivered', date: '28 May 2026', image: '/images/mobiles/iphone 16.jpeg' },
-  { id: 'ORD-002', product: 'Sony WH-1000XM6', price: 34999, status: 'Shipped', date: '30 May 2026', image: '/images/headphones/Sony WH-1000XM6.jpeg' },
-  { id: 'ORD-003', product: 'Apple AirPods Pro 2nd Gen', price: 24999, status: 'Processing', date: '1 Jun 2026', image: '/images/earbuds/Apple AirPods Pro (2nd Generation).jpeg' },
-];
-
-const statusColors = { Delivered: 'var(--success)', Shipped: 'var(--info)', Processing: 'var(--warning)', Cancelled: 'var(--error)' };
-const statusBg = { Delivered: 'var(--success-light)', Shipped: 'rgba(59,130,246,0.1)', Processing: 'var(--warning-light)', Cancelled: 'var(--error-light)' };
+const statusColors = { delivered: 'var(--success)', shipped: 'var(--info)', processing: 'var(--warning)', cancelled: 'var(--error)', pending: '#f59e0b' };
+const statusBg     = { delivered: 'var(--success-light)', shipped: 'rgba(59,130,246,0.1)', processing: 'var(--warning-light)', cancelled: 'var(--error-light)', pending: 'rgba(245,158,11,0.1)' };
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, cart, cartTotal, wishlist, removeFromCart, updateCartQty } = useAuthContext();
+  const [orders, setOrders]   = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+
+  useEffect(() => {
+    orderService.getMyOrders({ limit: 5 })
+      .then(res => setOrders(res.data?.orders || res.orders || []))
+      .catch(() => setOrders([]))
+      .finally(() => setLoadingOrders(false));
+  }, []);
 
   const STATS = [
-    { icon: '📦', label: 'Total Orders', value: MOCK_ORDERS.length, color: '#6366f1' },
-    { icon: '❤️', label: 'Wishlist', value: wishlist.length, color: '#f43f5e' },
-    { icon: '🛒', label: 'Cart Items', value: cart.reduce((s, i) => s + i.quantity, 0), color: '#10b981' },
-    { icon: '💰', label: 'Cart Value', value: formatPriceShort(cartTotal), color: '#f59e0b' },
+    { icon: '📦', label: 'Total Orders',  value: orders.length,                                color: '#6366f1' },
+    { icon: '❤️', label: 'Wishlist',       value: wishlist.length,                              color: '#f43f5e' },
+    { icon: '🛒', label: 'Cart Items',    value: cart.reduce((s, i) => s + i.quantity, 0),      color: '#10b981' },
+    { icon: '💰', label: 'Cart Value',    value: formatPriceShort(cartTotal),                   color: '#f59e0b' },
   ];
 
   return (
@@ -44,11 +48,7 @@ const Dashboard = () => {
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 20, marginBottom: 40 }}>
           {STATS.map(({ icon, label, value, color }) => (
-            <div key={label} style={{
-              padding: '24px', background: 'var(--bg-card)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)',
-              transition: 'all 0.3s ease',
-            }}
+            <div key={label} style={{ padding: '24px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', transition: 'all 0.3s ease' }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = color + '40'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = 'translateY(0)'; }}
             >
@@ -60,28 +60,46 @@ const Dashboard = () => {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }} className="dashboard-grid">
-          {/* Orders */}
+          {/* Recent Orders */}
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 24 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
               <HiClock size={20} style={{ color: 'var(--primary)' }} /> Recent Orders
             </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {MOCK_ORDERS.map(order => (
-                <div key={order.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px', background: 'var(--bg-elevated)', borderRadius: 12 }}>
-                  <img src={order.image} alt={order.product} style={{ width: 52, height: 52, objectFit: 'contain', background: 'var(--bg-secondary)', borderRadius: 8, padding: 4 }} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{order.product}</p>
-                    <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{order.id} · {order.date}</p>
-                  </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{formatPriceShort(order.price)}</p>
-                    <span style={{ padding: '3px 10px', background: statusBg[order.status], color: statusColors[order.status], borderRadius: 20, fontSize: 11, fontWeight: 700 }}>
-                      {order.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {loadingOrders ? (
+              <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)' }}>Loading orders…</div>
+            ) : orders.length === 0 ? (
+              <div className="empty-state" style={{ padding: '32px 0' }}>
+                <div style={{ fontSize: 32 }}>📦</div>
+                <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>No orders yet</p>
+                <button onClick={() => navigate('/products')} style={{ padding: '8px 20px', background: 'var(--primary-light)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 8, color: 'var(--primary)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Browse Products</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {orders.map(order => {
+                  const status = (order.status || 'pending').toLowerCase();
+                  const item = order.items?.[0];
+                  return (
+                    <div key={order._id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px', background: 'var(--bg-elevated)', borderRadius: 12 }}>
+                      <div style={{ width: 52, height: 52, background: 'var(--bg-secondary)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>📦</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item?.product_name || `Order #${order._id?.slice(-6).toUpperCase()}`}
+                        </p>
+                        <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                          {order._id?.slice(-8).toUpperCase()} · {new Date(order.createdAt).toLocaleDateString('en-IN')}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{formatPriceShort(order.total_amount)}</p>
+                        <span style={{ padding: '3px 10px', background: statusBg[status] || 'var(--bg-elevated)', color: statusColors[status] || 'var(--text-muted)', borderRadius: 20, fontSize: 11, fontWeight: 700, textTransform: 'capitalize' }}>
+                          {status}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Cart */}

@@ -1,23 +1,16 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-// import { authService } from '../services/authService'; // backend not required for demo
+import { authService } from '../services/authService';
 import { storage } from '../utils/helpers';
 import toast from 'react-hot-toast';
-
-// ── Mock users for demo (no backend required) ──────────────────────────────
-const MOCK_USERS = [
-  { id: 1, name: 'Demo User',  email: 'user@demo.com',  password: 'Demo@1234',  role: 'user',  phone: '+91 98765 43210' },
-  { id: 2, name: 'Admin User', email: 'admin@demo.com', password: 'Admin@1234', role: 'admin', phone: '+91 91234 56789' },
-];
-
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser]       = useState(() => storage.get('user'));
-  const [token, setToken]     = useState(() => storage.get('token'));
-  const [cart, setCart]       = useState(() => storage.get('cart') || []);
+  const [user, setUser]         = useState(() => storage.get('user'));
+  const [token, setToken]       = useState(() => storage.get('token'));
+  const [cart, setCart]         = useState(() => storage.get('cart') || []);
   const [wishlist, setWishlist] = useState(() => storage.get('wishlist') || []);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
 
   const isAuthenticated = !!token;
   const isAdmin = user?.role === 'admin';
@@ -25,67 +18,60 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => { storage.set('cart', cart); }, [cart]);
   useEffect(() => { storage.set('wishlist', wishlist); }, [wishlist]);
 
-  // ─── Auth Actions (mock — no backend needed) ────────────────
+  // ─── Fetch fresh user profile on load ────────────────────────
+  useEffect(() => {
+    if (token && !user) {
+      authService.getMe()
+        .then(res => {
+          const u = res.data?.user || res.user;
+          if (u) { setUser(u); storage.set('user', u); }
+        })
+        .catch(() => {
+          // Token expired — force logout
+          storage.remove('token');
+          storage.remove('user');
+          setToken(null);
+          setUser(null);
+        });
+    }
+  }, [token]);
+
+  // ─── Login ────────────────────────────────────────────────────
   const login = useCallback(async ({ email, password }) => {
     setLoading(true);
-    // Simulate network delay
-    await new Promise(r => setTimeout(r, 700));
     try {
-      // Check built-in demo accounts
-      let found = MOCK_USERS.find(
-        u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-      );
-      // Also check any accounts created via signup (stored in sessionStorage)
-      if (!found) {
-        const registered = JSON.parse(sessionStorage.getItem('registeredUsers') || '[]');
-        found = registered.find(
-          u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-        );
-      }
-      if (!found) {
-        throw new Error('Invalid email or password. Try user@demo.com / Demo@1234');
-      }
-      const { password: _pw, ...safeUser } = found;
-      const fakeToken = btoa(`${safeUser.id}:${safeUser.email}:${Date.now()}`);
-      storage.set('token', fakeToken);
-      storage.set('user', safeUser);
-      setToken(fakeToken);
-      setUser(safeUser);
-      toast.success(`Welcome back, ${safeUser.name}! 👋`);
-      return { success: true };
+      const res = await authService.login({ email, password });
+      const { token: jwt, user: u } = res.data || res;
+      storage.set('token', jwt);
+      storage.set('user', u);
+      setToken(jwt);
+      setUser(u);
+      toast.success(`Welcome back, ${u.name}! 👋`);
+      return { success: true, user: u };
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || 'Login failed');
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // ─── Register ─────────────────────────────────────────────────
   const signup = useCallback(async ({ name, email, password }) => {
     setLoading(true);
-    await new Promise(r => setTimeout(r, 700));
     try {
-      // Check if email already taken
-      const allUsers = [
-        ...MOCK_USERS,
-        ...JSON.parse(sessionStorage.getItem('registeredUsers') || '[]'),
-      ];
-      if (allUsers.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-        throw new Error('An account with this email already exists.');
-      }
-      const newUser = { id: Date.now(), name, email, password, role: 'user', phone: '' };
-      const registered = JSON.parse(sessionStorage.getItem('registeredUsers') || '[]');
-      sessionStorage.setItem('registeredUsers', JSON.stringify([...registered, newUser]));
-      toast.success('Account created! Please verify your email.');
+      await authService.register({ name, email, password });
+      toast.success('Account created! Please verify your email with the OTP sent.');
       return { success: true };
     } catch (err) {
-      toast.error(err.message);
+      toast.error(err.message || 'Registration failed');
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // ─── Logout ───────────────────────────────────────────────────
   const logout = useCallback(() => {
     storage.remove('token');
     storage.remove('user');
@@ -94,7 +80,13 @@ export const AuthProvider = ({ children }) => {
     toast.success('Logged out successfully.');
   }, []);
 
-  // ─── Cart Actions ────────────────────────────────────────────
+  // ─── Update user in context (used after profile save) ────────
+  const updateUser = useCallback((updated) => {
+    setUser(updated);
+    storage.set('user', updated);
+  }, []);
+
+  // ─── Cart Actions ─────────────────────────────────────────────
   const addToCart = useCallback((product, quantity = 1) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
@@ -123,7 +115,7 @@ export const AuthProvider = ({ children }) => {
 
   const clearCart = useCallback(() => setCart([]), []);
 
-  // ─── Wishlist Actions ────────────────────────────────────────
+  // ─── Wishlist Actions ─────────────────────────────────────────
   const toggleWishlist = useCallback((product) => {
     setWishlist(prev => {
       const exists = prev.find(p => p.id === product.id);
@@ -150,7 +142,7 @@ export const AuthProvider = ({ children }) => {
       user, token, loading, isAuthenticated, isAdmin,
       cart, cartCount, cartTotal,
       wishlist, isInWishlist, isInCart,
-      login, signup, logout,
+      login, signup, logout, updateUser,
       addToCart, removeFromCart, updateCartQty, clearCart,
       toggleWishlist,
     }}>

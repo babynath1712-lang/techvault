@@ -1,25 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HiUser, HiMail, HiPhone, HiPencil, HiSave } from 'react-icons/hi';
 import { useAuthContext } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
-  const { user } = useAuthContext();
+  const { user, updateUser } = useAuthContext();
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '' });
+  const [form, setForm]       = useState({ name: user?.name || '', email: user?.email || '', phone: user?.phone || '' });
   const [loading, setLoading] = useState(false);
+
+  // Sync form when user data loads
+  useEffect(() => {
+    if (user) setForm({ name: user.name || '', email: user.email || '', phone: user.phone || '' });
+  }, [user]);
 
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }));
 
   const handleSave = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    toast.success('Profile updated!');
-    setEditing(false);
-    setLoading(false);
+    try {
+      const res = await authService.updateProfile({ name: form.name, phone: form.phone });
+      const updated = res.data?.user || res.user || { ...user, ...form };
+      updateUser(updated);
+      toast.success('Profile updated successfully!');
+      setEditing(false);
+    } catch (err) {
+      toast.error(err.message || 'Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,7 +79,7 @@ const Profile = () => {
           {editing ? (
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <Input label="Full Name" id="profile-name" value={form.name} onChange={set('name')} icon={<HiUser />} required />
-              <Input label="Email" id="profile-email" type="email" value={form.email} onChange={set('email')} icon={<HiMail />} required />
+              <Input label="Email" id="profile-email" type="email" value={form.email} onChange={set('email')} icon={<HiMail />} required disabled />
               <Input label="Phone" id="profile-phone" value={form.phone} onChange={set('phone')} icon={<HiPhone />} placeholder="+91 98765 43210" />
               <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
                 <Button type="submit" loading={loading} icon={<HiSave size={16} />}>Save Changes</Button>

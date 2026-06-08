@@ -4,6 +4,7 @@ import { HiCheck, HiArrowLeft, HiLockClosed } from 'react-icons/hi';
 import { useAuthContext } from '../../context/AuthContext';
 import { formatPriceShort } from '../../utils/helpers';
 import { validateCheckout, hasErrors } from '../../utils/validators';
+import { orderService } from '../../services/orderService';
 import Input from '../../components/ui/Input';
 import RazorpayButton from '../../components/RazorpayButton';
 import toast from 'react-hot-toast';
@@ -12,20 +13,62 @@ const STEPS = ['Cart Review', 'Shipping', 'Payment'];
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { cart, cartTotal, clearCart } = useAuthContext();
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState({ fullName: '', email: '', phone: '', address: '', city: '', pincode: '', state: '' });
-  const [errors, setErrors] = useState({});
+  const { cart, cartTotal, clearCart, user } = useAuthContext();
+  const [step, setStep]           = useState(0);
+  const [form, setForm]           = useState({
+    fullName: user?.name || '',
+    email:    user?.email || '',
+    phone:    user?.phone || '',
+    address: '', city: '', pincode: '', state: '',
+  });
+  const [errors, setErrors]       = useState({});
   const [orderPlaced, setOrderPlaced] = useState(false);
-  const [orderId] = useState(`ORD-${Math.random().toString(36).slice(2,8).toUpperCase()}`);
+  const [realOrderId, setRealOrderId] = useState(null);
+  const [creatingOrder, setCreatingOrder] = useState(false);
 
   const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.value }));
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (step === 1) {
       const errs = validateCheckout(form);
       setErrors(errs);
       if (hasErrors(errs)) return;
+
+      // Step 1 → 2: Create real order in DB
+      setCreatingOrder(true);
+      try {
+        const orderData = {
+          items: cart.map(item => ({
+            product_id:   item._id || String(item.id),
+            product_name: item.name,
+            quantity:     item.quantity,
+            price:        item.price,
+            image:        item.image,
+          })),
+          shipping_address: {
+            full_name: form.fullName,
+            phone:     form.phone,
+            address:   form.address,
+            city:      form.city,
+            state:     form.state,
+            pincode:   form.pincode,
+            country:   'India',
+          },
+          total_amount: grandTotal,
+          payment_method: 'razorpay',
+        };
+
+        const res = await orderService.create(orderData);
+        const order = res.data?.order || res.order;
+        setRealOrderId(order?._id || order?.id);
+        toast.success('Order created! Proceed to payment.');
+        setStep(s => s + 1);
+      } catch (err) {
+        toast.error(err.message || 'Failed to create order. Please try again.');
+      } finally {
+        setCreatingOrder(false);
+      }
+      return;
     }
     setStep(s => s + 1);
   };
@@ -33,7 +76,7 @@ const Checkout = () => {
   const handleSuccess = () => {
     setOrderPlaced(true);
     clearCart();
-    toast.success('Order placed successfully!');
+    toast.success('🎉 Payment successful! Order confirmed.');
   };
 
   if (cart.length === 0 && !orderPlaced) return (
@@ -54,10 +97,14 @@ const Checkout = () => {
         </div>
         <h2 style={{ fontSize: 30, fontWeight: 800, marginBottom: 12 }}>Order Placed! 🎉</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: 16, marginBottom: 8 }}>Thank you for your purchase!</p>
-        <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 32 }}>Order ID: <strong style={{ color: 'var(--primary)' }}>{orderId}</strong></p>
+        {realOrderId && (
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginBottom: 32 }}>
+            Order ID: <strong style={{ color: 'var(--primary)' }}>#{realOrderId.slice(-8).toUpperCase()}</strong>
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           <button onClick={() => navigate('/dashboard')} style={{ padding: '12px 28px', background: 'var(--gradient-primary)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            View Order
+            View Orders
           </button>
           <button onClick={() => navigate('/products')} style={{ padding: '12px 28px', background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)', borderRadius: 12, fontSize: 15, cursor: 'pointer' }}>
             Continue Shopping
@@ -147,8 +194,12 @@ const Checkout = () => {
                   <Input label="State" id="state" placeholder="Maharashtra" value={form.state} onChange={set('state')} />
                   <Input label="Pincode" id="pincode" placeholder="400001" value={form.pincode} onChange={set('pincode')} error={errors.pincode} required />
                 </div>
-                <button onClick={handleNextStep} style={{ marginTop: 24, width: '100%', padding: '14px', background: 'var(--gradient-primary)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-                  Continue to Payment →
+                <button
+                  onClick={handleNextStep}
+                  disabled={creatingOrder}
+                  style={{ marginTop: 24, width: '100%', padding: '14px', background: creatingOrder ? 'var(--bg-elevated)' : 'var(--gradient-primary)', color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: creatingOrder ? 'not-allowed' : 'pointer', opacity: creatingOrder ? 0.7 : 1 }}
+                >
+                  {creatingOrder ? '⏳ Creating Order…' : 'Continue to Payment →'}
                 </button>
               </div>
             )}
@@ -166,7 +217,15 @@ const Checkout = () => {
                   <p style={{ fontSize: 14, fontWeight: 600 }}>{form.fullName}</p>
                   <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{form.address}, {form.city}, {form.pincode}</p>
                 </div>
-                <RazorpayButton amount={grandTotal} orderId={orderId} productName={`Order ${orderId}`} onSuccess={handleSuccess} />
+                <RazorpayButton
+                  amount={grandTotal}
+                  orderId={realOrderId}
+                  productName={`TechVault Order`}
+                  customerName={form.fullName}
+                  customerEmail={form.email}
+                  customerPhone={form.phone}
+                  onSuccess={handleSuccess}
+                />
               </div>
             )}
           </div>
