@@ -25,7 +25,23 @@ const register = async (req, res, next) => {
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return sendError(res, 400, 'An account with this email already exists');
+      // If account exists but is NOT verified → resend OTP so they can verify
+      if (!existingUser.isVerified) {
+        try {
+          const otp = await generateOTP(existingUser._id, 'email_verification');
+          await sendOTPEmail(existingUser.email, existingUser.name, otp, 'email_verification');
+        } catch (emailErr) {
+          console.warn('OTP resend failed:', emailErr.message);
+        }
+        const token = generateToken(existingUser._id, existingUser.role);
+        return sendSuccess(res, 200, 'Account already registered. A new OTP has been sent to your email.', {
+          token,
+          user: existingUser.toJSON(),
+          resent: true,
+        });
+      }
+      // Fully verified account — reject
+      return sendError(res, 400, 'An account with this email already exists. Please login instead.');
     }
 
     const user = await User.create({
