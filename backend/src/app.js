@@ -16,6 +16,10 @@ const { apiLimiter } = require('./middleware/rateLimitMiddleware');
 
 const app = express();
 
+// ─── Trust Proxy (required for Render/Vercel/Heroku) ──────────────
+// Allows express-rate-limit to correctly identify client IPs
+app.set('trust proxy', 1);
+
 // ─── Core Middleware ───────────────────────────────────────────────
 app.use(cors({
   origin: [
