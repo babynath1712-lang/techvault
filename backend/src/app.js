@@ -21,7 +21,7 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:5173',
-    'https://techvault-frontend.vercel.app',
+    'https://techvault-neon.vercel.app',
     process.env.CLIENT_URL,
   ].filter(Boolean),
   credentials: true,
