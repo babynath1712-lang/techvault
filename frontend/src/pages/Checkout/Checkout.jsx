@@ -6,7 +6,7 @@ import { formatPriceShort } from '../../utils/helpers';
 import { validateCheckout, hasErrors } from '../../utils/validators';
 import { orderService } from '../../services/orderService';
 import Input from '../../components/ui/Input';
-import RazorpayButton from '../../components/RazorpayButton';
+import UPIPaymentButton from '../../components/RazorpayButton';
 import toast from 'react-hot-toast';
 
 const STEPS = ['Cart Review', 'Shipping', 'Payment'];
@@ -210,20 +210,16 @@ const Checkout = () => {
                 <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Payment</h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, padding: '10px 16px', background: 'var(--success-light)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10 }}>
                   <HiLockClosed size={16} style={{ color: 'var(--success)' }} />
-                  <span style={{ fontSize: 13, color: 'var(--success)', fontWeight: 600 }}>Secured by Razorpay — 256-bit SSL encryption</span>
+                  <span style={{ fontSize: 13, color: 'var(--success)', fontWeight: 600 }}>Secure UPI Payment · sivambabynath@okicic</span>
                 </div>
                 <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: 12, marginBottom: 20 }}>
                   <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>Delivering to:</p>
                   <p style={{ fontSize: 14, fontWeight: 600 }}>{form.fullName}</p>
                   <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{form.address}, {form.city}, {form.pincode}</p>
                 </div>
-                <RazorpayButton
+                <UPIPaymentButton
                   amount={grandTotal}
                   orderId={realOrderId}
-                  productName={`TechVault Order`}
-                  customerName={form.fullName}
-                  customerEmail={form.email}
-                  customerPhone={form.phone}
                   onSuccess={handleSuccess}
                 />
               </div>
