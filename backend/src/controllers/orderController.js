@@ -8,7 +8,7 @@ const { sendSuccess, sendError, sendPaginated } = require('../utils/response');
 // ─── Create Order ─────────────────────────────────────────────────
 const createOrder = async (req, res, next) => {
   try {
-    const { items, shipping_address, notes } = req.body;
+    const { items, shipping_address, total_amount: clientTotal, notes } = req.body;
 
     if (!items || items.length === 0) {
       return sendError(res, 400, 'Order must have at least one item');
@@ -18,45 +18,42 @@ const createOrder = async (req, res, next) => {
       return sendError(res, 400, 'Shipping address is required');
     }
 
-    // Validate products and build order items
+    // Build order items from frontend data (products may not be in MongoDB)
     let total_amount = 0;
-    const orderItems = [];
-
-    for (const item of items) {
-      if (!item.product_id || !item.quantity || item.quantity < 1) {
-        return sendError(res, 400, 'Each item must have a valid product_id and quantity');
-      }
-
-      const product = await Product.findById(item.product_id);
-      if (!product) return sendError(res, 404, `Product ${item.product_id} not found`);
-      if (product.status !== 'active') return sendError(res, 400, `"${product.title}" is not available`);
-      if (product.stock < item.quantity) {
-        return sendError(res, 400, `Only ${product.stock} units available for "${product.title}"`);
-      }
-
-      const unit_price = product.price;
-      total_amount += unit_price * item.quantity;
-
-      orderItems.push({
-        product_id: product._id,
-        title: product.title,
-        image: product.images[0] || null,
-        quantity: item.quantity,
+    const orderItems = items.map(item => {
+      const unit_price = Number(item.price || item.unit_price || 0);
+      const qty        = Number(item.quantity || 1);
+      total_amount    += unit_price * qty;
+      return {
+        product_id: String(item.product_id || item.id || 'unknown'),
+        title:      item.product_name || item.title || item.name || 'Product',
+        image:      item.image || null,
+        quantity:   qty,
         unit_price,
-      });
+      };
+    });
 
-      // Reduce stock
-      product.stock -= item.quantity;
-      if (product.stock === 0) product.status = 'out_of_stock';
-      await product.save();
-    }
+    // Use client-provided total if available (includes shipping)
+    const finalTotal = clientTotal || total_amount;
+
+    // Normalize shipping address field names
+    const addr = shipping_address;
+    const normalizedAddress = {
+      name:    addr.full_name || addr.name || '',
+      phone:   addr.phone    || '',
+      street:  addr.address  || addr.street || '',
+      city:    addr.city     || '',
+      state:   addr.state    || '',
+      pincode: addr.pincode  || '',
+      country: addr.country  || 'India',
+    };
 
     const order = await Order.create({
-      buyer_id: req.user._id,
-      items: orderItems,
-      total_amount,
-      shipping_address,
-      notes: notes || '',
+      buyer_id:         req.user._id,
+      items:            orderItems,
+      total_amount:     finalTotal,
+      shipping_address: normalizedAddress,
+      notes:            notes || '',
     });
 
     // Send notification (non-blocking)
@@ -64,7 +61,7 @@ const createOrder = async (req, res, next) => {
       req.user._id,
       'order_placed',
       'Order Placed Successfully',
-      `Your order #${order._id} for ₹${total_amount.toLocaleString('en-IN')} has been placed.`,
+      `Your order #${order._id} for ₹${finalTotal.toLocaleString('en-IN')} has been placed.`,
       order._id,
       'Order'
     ).catch(() => {});
