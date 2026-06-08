@@ -28,11 +28,14 @@ api.interceptors.response.use(
   (error) => {
     const msg = error.response?.data?.message || error.message || 'Something went wrong';
 
-    // Auto-logout on 401
+    // Auto-logout on 401 — clear storage and redirect softly
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Use hash navigation to avoid Vercel SPA 404
+      if (!window.location.pathname.includes('/login')) {
+        window.location.replace('/login');
+      }
     }
 
     return Promise.reject(new Error(msg));
