@@ -1,0 +1,50 @@
+[
+  {
+    "name": "Ravi Kumar",
+    "email": "ravi.buyer@example.com",
+    "password": "Test@1234",
+    "role": "buyer",
+    "phone": "+91 9876543210",
+    "address": {
+      "street": "42 MG Road",
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "pincode": "560001",
+      "country": "India"
+    },
+    "isVerified": true,
+    "isActive": true
+  },
+  {
+    "name": "Priya Sharma",
+    "email": "priya.seller@example.com",
+    "password": "Test@1234",
+    "role": "seller",
+    "phone": "+91 9812345678",
+    "address": {
+      "street": "15 Anna Nagar",
+      "city": "Chennai",
+      "state": "Tamil Nadu",
+      "pincode": "600040",
+      "country": "India"
+    },
+    "isVerified": true,
+    "isActive": true
+  },
+  {
+    "name": "Arjun Nair",
+    "email": "arjun.buyer2@example.com",
+    "password": "Test@1234",
+    "role": "buyer",
+    "phone": "+91 9988776655",
+    "address": {
+      "street": "7 Marine Drive",
+      "city": "Mumbai",
+      "state": "Maharashtra",
+      "pincode": "400002",
+      "country": "India"
+    },
+    "isVerified": true,
+    "isActive": true
+  }
+]

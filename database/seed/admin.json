@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Admin",
+    "email": "admin@techvault.com",
+    "password": "Admin@1234",
+    "role": "admin",
+    "phone": "+91 9000000001",
+    "address": {
+      "street": "TechVault HQ, Cyber City",
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "pincode": "500081",
+      "country": "India"
+    },
+    "isVerified": true,
+    "isActive": true
+  }
+]

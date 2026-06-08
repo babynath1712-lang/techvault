@@ -1,0 +1,97 @@
+[
+  {
+    "title": "Apple MacBook Pro M3 14-inch",
+    "description": "The most powerful MacBook Pro ever. With M3 chip, 16GB unified memory, 512GB SSD. Perfect for developers, designers, and creatives.",
+    "price": 164900,
+    "stock": 15,
+    "category": "Laptops",
+    "images": [
+      "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/mbp14-spacegray-select-202310?wid=904&hei=840&fmt=jpeg"
+    ],
+    "status": "active",
+    "specifications": {
+      "Processor": "Apple M3",
+      "RAM": "16GB Unified Memory",
+      "Storage": "512GB SSD",
+      "Display": "14.2-inch Liquid Retina XDR",
+      "Battery": "Up to 18 hours",
+      "OS": "macOS Sonoma"
+    }
+  },
+  {
+    "title": "Samsung Galaxy S24 Ultra 5G",
+    "description": "The ultimate Galaxy AI experience. 200MP camera, built-in S Pen, titanium frame, 5000mAh battery.",
+    "price": 132999,
+    "stock": 30,
+    "category": "Smartphones",
+    "images": [
+      "https://images.samsung.com/in/smartphones/galaxy-s24-ultra/images/galaxy-s24-ultra-highlights-color-titaniumblack-1-mo.jpg"
+    ],
+    "status": "active",
+    "specifications": {
+      "Processor": "Snapdragon 8 Gen 3",
+      "RAM": "12GB",
+      "Storage": "256GB",
+      "Display": "6.8-inch QHD+ Dynamic AMOLED 2X",
+      "Camera": "200MP + 50MP + 12MP + 10MP",
+      "Battery": "5000mAh"
+    }
+  },
+  {
+    "title": "Sony WH-1000XM5 Wireless Headphones",
+    "description": "Industry-leading noise cancellation with 30-hour battery life. Crystal clear hands-free calling and Alexa built-in.",
+    "price": 26990,
+    "stock": 50,
+    "category": "Audio",
+    "images": [
+      "https://www.sony.co.in/image/5d02da5df552836db894cead8a68f764?fmt=png-alpha&wid=660"
+    ],
+    "status": "active",
+    "specifications": {
+      "Type": "Over-ear",
+      "Connectivity": "Bluetooth 5.2",
+      "Battery": "30 hours",
+      "Noise Cancellation": "Industry-leading ANC",
+      "Weight": "250g",
+      "Color": "Black"
+    }
+  },
+  {
+    "title": "iPad Pro 12.9-inch M2",
+    "description": "The ultimate iPad experience with M2 chip, Liquid Retina XDR display, and Apple Pencil hover.",
+    "price": 112900,
+    "stock": 20,
+    "category": "Tablets",
+    "images": [
+      "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/ipad-pro-12-select-wifi-spacegray-202210?wid=940&hei=1112"
+    ],
+    "status": "active",
+    "specifications": {
+      "Processor": "Apple M2",
+      "RAM": "8GB",
+      "Storage": "128GB",
+      "Display": "12.9-inch Liquid Retina XDR",
+      "Connectivity": "Wi-Fi 6E",
+      "OS": "iPadOS 17"
+    }
+  },
+  {
+    "title": "ASUS ROG Zephyrus G14 Gaming Laptop",
+    "description": "AMD Ryzen 9 + RTX 4060, 14-inch 165Hz display. The perfect blend of portability and gaming performance.",
+    "price": 129990,
+    "stock": 10,
+    "category": "Gaming",
+    "images": [
+      "https://dlcdnwebimgs.asus.com/gain/a83516f4-6a14-4d06-a2f3-9b5258a04e76/w800/fwebp"
+    ],
+    "status": "active",
+    "specifications": {
+      "Processor": "AMD Ryzen 9 7940HS",
+      "GPU": "NVIDIA RTX 4060 8GB",
+      "RAM": "16GB DDR5",
+      "Storage": "512GB SSD",
+      "Display": "14-inch QHD 165Hz",
+      "Battery": "73Whr"
+    }
+  }
+]
