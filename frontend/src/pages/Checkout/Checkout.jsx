@@ -210,7 +210,7 @@ const Checkout = () => {
                 <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Payment</h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, padding: '10px 16px', background: 'var(--success-light)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 10 }}>
                   <HiLockClosed size={16} style={{ color: 'var(--success)' }} />
-                  <span style={{ fontSize: 13, color: 'var(--success)', fontWeight: 600 }}>Secure UPI Payment · sivambabynath@okicic</span>
+                  <span style={{ fontSize: 13, color: 'var(--success)', fontWeight: 600 }}>Secure UPI Payment · sivambabynath@okicici</span>
                 </div>
                 <div style={{ padding: '16px', background: 'var(--bg-elevated)', borderRadius: 12, marginBottom: 20 }}>
                   <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>Delivering to:</p>

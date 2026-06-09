@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import realQRImage from '../assets/images/upi_qr_real.jpg';
 
 // ── UPI Payment Component ───────────────────────────────────────────────────
-// Generates a QR code and deep links for UPI apps using the store's UPI ID
+// Shows a scannable UPI QR + deep links for all major UPI apps
 
-const UPI_ID   = 'sivambabynath@okicic';
-const UPI_NAME = 'TechVault';
+const UPI_ID   = 'sivambabynath@okicici';   // India Post Payment Bank
+const UPI_NAME = 'Baby nath';
 
 const UPIPaymentButton = ({
   amount,
@@ -58,8 +59,8 @@ const UPIModal = ({ amount, orderId, onSuccess, onClose }) => {
   const [txnId, setTxnId]   = useState('');
   const [loading, setLoading] = useState(false);
 
+  // UPI deep-link used for app buttons
   const upiLink = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent('TechVault Order')}`;
-  const qrUrl   = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiLink)}&color=6366f1&bgcolor=ffffff&margin=12`;
 
   const UPI_APPS = [
     { name: 'GPay',    icon: '🟢', link: `tez://upi/pay?pa=${UPI_ID}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR` },
@@ -150,20 +151,40 @@ const UPIModal = ({ amount, orderId, onSuccess, onClose }) => {
               <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, fontWeight: 500 }}>
                 Scan with any UPI app to pay
               </p>
+              {/* Crop the screenshot to show only the QR code square */}
               <div style={{
-                display: 'inline-flex', padding: 12,
-                background: '#fff', borderRadius: 16,
+                width: 220,
+                height: 220,
+                overflow: 'hidden',
+                borderRadius: 12,
+                background: '#fff',
                 boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                border: '2px solid rgba(99,102,241,0.2)',
+                border: '2px solid rgba(99,102,241,0.15)',
+                flexShrink: 0,
               }}>
                 <img
-                  src={qrUrl}
-                  alt="UPI QR Code"
-                  width={200}
-                  height={200}
-                  style={{ display: 'block', borderRadius: 8 }}
+                  src={realQRImage}
+                  alt={`UPI QR — pay to ${UPI_ID}`}
+                  style={{
+                    /*
+                      Screenshot dimensions: ~463 × 1002 px
+                      QR square occupies roughly:
+                        top: 12%  bottom: 49%  (center ~30%)
+                        left: 5%  right: 95%
+                      We render the img at a height that makes the QR
+                      fill the 220px container, then translate to centre it.
+                    */
+                    width: '105%',
+                    height: 'auto',
+                    display: 'block',
+                    transform: 'translateY(-29%)',   /* shift down into QR zone */
+                    marginLeft: '-2.5%',
+                  }}
                 />
               </div>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 10 }}>
+                Paying to: <strong style={{ color: 'var(--text-primary)' }}>{UPI_NAME}</strong> · India Post Payment Bank
+              </p>
             </div>
 
             {/* UPI ID */}

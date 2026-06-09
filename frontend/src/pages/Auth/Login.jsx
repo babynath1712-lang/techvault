@@ -22,7 +22,8 @@ const Login = () => {
     if (hasErrors(errs)) return;
     const res = await login(form);
     if (res.success) {
-      navigate('/');
+      // Redirect admin users to admin dashboard, others to home
+      navigate(res.user?.role === 'admin' ? '/admin' : '/');
     }
   };
 

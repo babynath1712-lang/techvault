@@ -62,7 +62,7 @@ const createUPIOrder = async ({ amount, currency = 'INR', receipt, notes = {} })
     receipt,
     notes: {
       ...notes,
-      upi_id: process.env.UPI_ID || 'sivambabynath@okicic',
+      upi_id: process.env.UPI_ID || 'sivambabynath@okicici',
     },
   });
 
@@ -71,8 +71,8 @@ const createUPIOrder = async ({ amount, currency = 'INR', receipt, notes = {} })
 
 // ─── Get UPI Details ──────────────────────────────────────────────
 const getUPIDetails = () => ({
-  upi_id: process.env.UPI_ID || 'sivambabynath@okicic',
-  name: process.env.UPI_NAME || 'TechVault',
+  upi_id: process.env.UPI_ID || 'sivambabynath@okicici',
+  name: process.env.UPI_NAME || 'Baby nath',
 });
 
 module.exports = {
