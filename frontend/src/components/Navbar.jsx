@@ -229,7 +229,7 @@ const Navbar = () => {
                   }}>
                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span className="nav-username" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user?.name?.split(' ')[0] || 'User'}
                   </span>
                 </button>
@@ -258,7 +258,7 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 8 }} className="nav-login-btn">
                 <Link to="/login" style={ghostBtnStyle}>Login</Link>
                 <Link to="/signup" style={primaryBtnStyle}>Sign Up</Link>
               </div>
@@ -272,7 +272,7 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Drawer */}
       {mobileOpen && (
         <div style={{
           position: 'fixed', inset: 0, zIndex: 999,
@@ -281,18 +281,47 @@ const Navbar = () => {
           <div style={{
             position: 'absolute', top: 'var(--nav-height)', left: 0, right: 0,
             background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)',
-            padding: '16px 24px 24px',
+            padding: '16px 20px 28px',
             animation: 'fadeInDown 0.3s ease',
+            maxHeight: 'calc(100vh - var(--nav-height))',
+            overflowY: 'auto',
           }} onClick={(e) => e.stopPropagation()}>
+
+            {/* Mobile Search */}
+            <form onSubmit={handleSearch} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products…"
+                style={{
+                  flex: 1, padding: '10px 14px',
+                  background: 'var(--bg-card)', border: '1px solid var(--border)',
+                  borderRadius: 8, color: 'var(--text-primary)', fontSize: 14, outline: 'none',
+                }}
+              />
+              <button type="submit" style={{ padding: '10px 16px', background: 'var(--gradient-primary)', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+                Go
+              </button>
+            </form>
+
+            {/* Category Links */}
             {CATEGORIES_NAV.map(({ label, path }) => (
               <Link key={label} to={path} style={{
-                display: 'block', padding: '12px 0',
+                display: 'block', padding: '13px 0',
                 fontSize: 16, fontWeight: 500, color: 'var(--text-secondary)',
                 borderBottom: '1px solid var(--border-light)',
               }}>
                 {label}
               </Link>
             ))}
+
+            {/* Auth links on mobile (when not logged in) */}
+            {!isAuthenticated && (
+              <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                <Link to="/login" style={{ flex: 1, padding: '12px', textAlign: 'center', border: '1px solid var(--border)', borderRadius: 10, color: 'var(--text-secondary)', fontWeight: 600, fontSize: 15 }}>Login</Link>
+                <Link to="/signup" style={{ flex: 1, padding: '12px', textAlign: 'center', background: 'var(--gradient-primary)', borderRadius: 10, color: '#fff', fontWeight: 700, fontSize: 15 }}>Sign Up</Link>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -301,6 +330,11 @@ const Navbar = () => {
         @media (max-width:768px) {
           .desktop-nav { display:none !important; }
           .mobile-menu-btn { display:flex !important; }
+          .nav-login-btn { display:none !important; }
+          .nav-username { display:none !important; }
+        }
+        @media (max-width:480px) {
+          .nav-wishlist, .nav-notifications { display:none !important; }
         }
       `}</style>
     </>

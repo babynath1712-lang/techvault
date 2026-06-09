@@ -143,16 +143,16 @@ const Checkout = () => {
                 }}>
                   {i < step ? <HiCheck size={16} /> : i + 1}
                 </div>
-                <span style={{ fontSize: 13, fontWeight: i === step ? 700 : 400, color: i <= step ? 'var(--primary)' : 'var(--text-muted)' }}>{s}</span>
+                <span className="step-label" style={{ fontSize: 13, fontWeight: i === step ? 700 : 400, color: i <= step ? 'var(--primary)' : 'var(--text-muted)' }}>{s}</span>
               </div>
               {i < STEPS.length - 1 && <div style={{ flex: 1, height: 1, background: i < step ? 'var(--primary)' : 'var(--border)', margin: '0 12px', transition: 'background 0.3s ease' }} />}
             </React.Fragment>
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28, alignItems: 'start' }} className="checkout-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'start' }} className="checkout-grid">
           {/* Left: Steps */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 32 }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-xl)', padding: 'clamp(16px,4vw,32px)' }}>
             {/* Step 0: Cart Review */}
             {step === 0 && (
               <div>
@@ -258,6 +258,10 @@ const Checkout = () => {
       <style>{`
         @media (max-width:768px) {
           .checkout-grid { grid-template-columns:1fr !important; }
+        }
+        @media (max-width:480px) {
+          .step-label { display:none !important; }
+          .checkout-grid > div { border-radius:var(--radius-md) !important; }
         }
       `}</style>
     </div>

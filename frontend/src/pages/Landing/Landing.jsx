@@ -110,10 +110,10 @@ const Landing = () => {
               </div>
 
               {/* Stats Row */}
-              <div style={{ display: 'flex', gap: 28, marginTop: 48, paddingTop: 32, borderTop: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', gap: 20, marginTop: 40, paddingTop: 28, borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
                 {STATS.map(({ value, label }) => (
                   <div key={label}>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--primary)', fontFamily: "'Space Grotesk',sans-serif" }}>{value}</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)', fontFamily: "'Space Grotesk',sans-serif" }}>{value}</div>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{label}</div>
                   </div>
                 ))}
@@ -362,8 +362,17 @@ const Landing = () => {
 
       <style>{`
         @media (max-width:768px) {
-          .hero-grid { grid-template-columns:1fr !important; }
-          .hero-grid > div:last-child { display:none; }
+          .hero-grid { grid-template-columns:1fr !important; text-align:center; min-height:auto !important; padding: 80px 0 40px; }
+          .hero-grid > div:last-child { display:none !important; }
+          .hero-grid > div:first-child > div:first-child { justify-content:center !important; }
+          .hero-buttons { justify-content:center !important; }
+        }
+        @media (max-width:480px) {
+          .hero-grid { padding: 60px 0 32px !important; }
+          .cta-banner { padding:32px 16px !important; }
+          .cta-banner h2 { font-size:1.4rem !important; }
+          .cta-buttons { flex-direction:column !important; align-items:stretch !important; }
+          .cta-buttons button { width:100% !important; }
         }
       `}</style>
     </div>

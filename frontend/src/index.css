@@ -389,13 +389,137 @@ h1,h2,h3,h4,h5,h6 { font-family:'Space Grotesk',sans-serif; line-height:1.2; col
 .empty-state-title { font-size:18px; font-weight:600; color:var(--text-primary); }
 .empty-state-text { font-size:14px; color:var(--text-secondary); max-width:320px; }
 
-/* ─── Responsive ────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE SYSTEM — Full site, all breakpoints
+   xl: 1280+  lg: 1024–1279  md: 768–1023  sm: 480–767  xs: <480
+   ══════════════════════════════════════════════════════════ */
+
+/* ─── Large Laptop / Desktop (1024px+) ─────────────────── */
+@media (max-width:1280px) {
+  .container { max-width:100%; padding:0 32px; }
+}
+
+/* ─── Tablet / Small Laptop (max 1024px) ───────────────── */
+@media (max-width:1024px) {
+  .container { padding:0 20px; }
+  .products-grid { grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:20px; }
+  .admin-grid { grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:16px; }
+  .section { padding:64px 0; }
+}
+
+/* ─── Tablet Portrait (max 768px) ──────────────────────── */
 @media (max-width:768px) {
+  :root { --nav-height:60px; }
+
+  /* Layout */
   .container { padding:0 16px; }
   .section { padding:48px 0; }
-  .products-grid { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:16px; }
-  .heading-xl { font-size:2rem; }
+  .section-sm { padding:32px 0; }
+  .section-header { margin-bottom:32px; }
+  .section-title { font-size:1.8rem; }
+  .section-subtitle { font-size:14px; }
+
+  /* Typography */
+  .heading-xl { font-size:clamp(1.8rem,6vw,2.4rem); }
+  .heading-lg { font-size:clamp(1.4rem,4vw,1.8rem); }
+  .page-title { font-size:1.4rem; }
+
+  /* Grids */
+  .products-grid { grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:14px; }
+  .admin-grid { grid-template-columns:repeat(2,1fr); gap:14px; }
+
+  /* Hero */
+  .hero-grid { grid-template-columns:1fr !important; text-align:center; }
+  .hero-grid > div:last-child { display:none !important; }
+  .hero-grid > div:first-child > div:first-child { justify-content:center; }
+  .hero-grid > div:first-child > div[style*="flex"] { justify-content:center; }
+
+  /* Checkout */
+  .checkout-grid { grid-template-columns:1fr !important; }
+
+  /* Navbar */
+  .desktop-nav { display:none !important; }
+  .mobile-menu-btn { display:flex !important; }
+  .nav-login-btn { display:none !important; }
+
+  /* Tables — horizontal scroll */
+  .table-wrapper { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .data-table th, .data-table td { padding:12px 14px; font-size:13px; }
+
+  /* Cards */
+  .card { border-radius:var(--radius-md); }
+
+  /* Tabs — scroll horizontal */
+  .tabs { overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; padding-bottom:2px; }
+  .tab-btn { padding:8px 14px; font-size:13px; }
+
+  /* Empty state */
+  .empty-state { padding:48px 16px; }
+  .empty-state-icon { font-size:36px; }
+
+  /* CTA banner */
+  .cta-banner { padding:40px 24px !important; }
+
+  /* Admin sidebar */
+  .admin-sidebar { width:100% !important; position:relative !important; height:auto !important; }
+  .admin-main { margin-left:0 !important; }
 }
+
+/* ─── Mobile (max 480px) ────────────────────────────────── */
 @media (max-width:480px) {
-  .products-grid { grid-template-columns:1fr 1fr; gap:12px; }
+  :root { --nav-height:56px; }
+
+  /* Layout */
+  .container { padding:0 12px; }
+  .section { padding:36px 0; }
+
+  /* Grids */
+  .products-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+  .admin-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+
+  /* Typography */
+  .heading-xl { font-size:1.7rem; }
+  .section-title { font-size:1.5rem; }
+  .price { font-size:1.2rem; }
+
+  /* Cards — tighter */
+  .card { border-radius:var(--radius-sm); }
+
+  /* Page headers */
+  .page-header { padding:24px 0 0; }
+  .page-title { font-size:1.2rem; }
+
+  /* Section header */
+  .section-header { margin-bottom:24px; }
+  .section-label { font-size:11px; padding:4px 12px; }
+
+  /* Badges */
+  .badge { font-size:11px; padding:3px 8px; }
+
+  /* Tables */
+  .data-table th, .data-table td { padding:10px 10px; font-size:12px; }
+
+  /* Tabs */
+  .tab-btn { padding:7px 12px; font-size:12px; }
+
+  /* Form */
+  .form-input { padding:10px 12px; font-size:14px; }
+}
+
+/* ─── Extra small (max 360px) ───────────────────────────── */
+@media (max-width:360px) {
+  .products-grid { grid-template-columns:1fr 1fr; gap:8px; }
+  .container { padding:0 10px; }
+  .heading-xl { font-size:1.5rem; }
+  .section-title { font-size:1.3rem; }
+}
+
+/* ─── Touch hover fix — disable transforms on touch ─────── */
+@media (hover:none) and (pointer:coarse) {
+  .card:hover { transform:none; }
+}
+
+/* ─── Landscape phone ───────────────────────────────────── */
+@media (max-width:812px) and (orientation:landscape) {
+  .hero-section { min-height:auto !important; padding:80px 0 !important; }
 }
