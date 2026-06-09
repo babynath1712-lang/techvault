@@ -6,10 +6,19 @@ const { verifyMailConnection } = require('./config/mail');
 const PORT = process.env.PORT || 5000;
 
 // ─── Keep-Alive ping to prevent Render free-tier from sleeping ────
-// Render sleeps after 15 min of inactivity — ping every 14 min to stay warm
+// Render sleeps after 15 min of inactivity — ping every 10 min to stay warm.
+// Uses RENDER_EXTERNAL_URL (set automatically by Render) or BACKEND_URL from .env.
+// NOTE: For guaranteed cold-start prevention, also set up a free external cron
+// at https://cron-job.org pointing to <your-render-url>/api/health every 10 min.
 const keepAlive = () => {
-  const BACKEND_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
-  setInterval(async () => {
+  const BACKEND_URL =
+    process.env.RENDER_EXTERNAL_URL ||
+    process.env.BACKEND_URL ||
+    `http://localhost:${PORT}`;
+
+  console.log(`🏓 Keep-alive started → pinging ${BACKEND_URL}/api/health every 10 min`);
+
+  setInterval(() => {
     try {
       const http = BACKEND_URL.startsWith('https') ? require('https') : require('http');
       http.get(`${BACKEND_URL}/api/health`, (res) => {
@@ -20,7 +29,7 @@ const keepAlive = () => {
     } catch (e) {
       console.warn('⚠️  Keep-alive skipped:', e.message);
     }
-  }, 14 * 60 * 1000); // every 14 minutes
+  }, 10 * 60 * 1000); // every 10 minutes (well under the 15-min sleep threshold)
 };
 
 // ─── Start Server ─────────────────────────────────────────────────
@@ -52,8 +61,8 @@ const startServer = async () => {
       console.log('╚══════════════════════════════════════════╝');
       console.log('');
 
-      // Start keep-alive pings only in production
-      if (process.env.NODE_ENV === 'production') keepAlive();
+      // Start keep-alive pings (always — needed on Render free tier)
+      keepAlive();
     });
 
     // 4. Graceful shutdown handlers

@@ -3,6 +3,28 @@ import { authService } from '../services/authService';
 import { storage } from '../utils/helpers';
 import toast from 'react-hot-toast';
 
+// Helper: retry async fn up to `retries` times on timeout/network error
+const retryOnColdStart = async (fn, retries = 2, delayMs = 6000) => {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isTransient = err.message?.includes('waking up') ||
+        err.message?.includes('timeout') ||
+        err.message?.includes('Network Error') ||
+        err.message?.includes('cannot reach server');
+      if (isTransient && i < retries) {
+        toast.loading(`⏳ Server is waking up… retrying (${i + 1}/${retries})`, { id: 'cold-start' });
+        await new Promise(r => setTimeout(r, delayMs));
+        continue;
+      }
+      toast.dismiss('cold-start');
+      throw err;
+    }
+  }
+  toast.dismiss('cold-start');
+};
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -60,10 +82,12 @@ export const AuthProvider = ({ children }) => {
   const signup = useCallback(async ({ name, email, password }) => {
     setLoading(true);
     try {
-      await authService.register({ name, email, password });
+      await retryOnColdStart(() => authService.register({ name, email, password }));
+      toast.dismiss('cold-start');
       toast.success('Account created! Please verify your email with the OTP sent.');
       return { success: true };
     } catch (err) {
+      toast.dismiss('cold-start');
       toast.error(err.message || 'Registration failed');
       return { success: false, error: err.message };
     } finally {
