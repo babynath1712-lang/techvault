@@ -1,29 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService';
 import { storage } from '../utils/helpers';
+import { waitUntilReady } from '../services/serverHealth';
 import toast from 'react-hot-toast';
-
-// Helper: retry async fn up to `retries` times on timeout/network error
-const retryOnColdStart = async (fn, retries = 2, delayMs = 6000) => {
-  for (let i = 0; i <= retries; i++) {
-    try {
-      return await fn();
-    } catch (err) {
-      const isTransient = err.message?.includes('waking up') ||
-        err.message?.includes('timeout') ||
-        err.message?.includes('Network Error') ||
-        err.message?.includes('cannot reach server');
-      if (isTransient && i < retries) {
-        toast.loading(`⏳ Server is waking up… retrying (${i + 1}/${retries})`, { id: 'cold-start' });
-        await new Promise(r => setTimeout(r, delayMs));
-        continue;
-      }
-      toast.dismiss('cold-start');
-      throw err;
-    }
-  }
-  toast.dismiss('cold-start');
-};
 
 const AuthContext = createContext(null);
 
@@ -61,16 +40,23 @@ export const AuthProvider = ({ children }) => {
   // ─── Login ────────────────────────────────────────────────────
   const login = useCallback(async ({ email, password }) => {
     setLoading(true);
+    const toastId = toast.loading('Connecting to server…');
     try {
+      // Wait until Render server is awake before sending the request
+      await waitUntilReady();
+      toast.loading('Signing you in…', { id: toastId });
+
       const res = await authService.login({ email, password });
       const { token: jwt, user: u } = res.data || res;
       storage.set('token', jwt);
       storage.set('user', u);
       setToken(jwt);
       setUser(u);
+      toast.dismiss(toastId);
       toast.success(`Welcome back, ${u.name}! 👋`);
       return { success: true, user: u };
     } catch (err) {
+      toast.dismiss(toastId);
       toast.error(err.message || 'Login failed');
       return { success: false, error: err.message };
     } finally {
@@ -81,13 +67,20 @@ export const AuthProvider = ({ children }) => {
   // ─── Register ─────────────────────────────────────────────────
   const signup = useCallback(async ({ name, email, password }) => {
     setLoading(true);
+    const toastId = toast.loading('Connecting to server…');
     try {
-      await retryOnColdStart(() => authService.register({ name, email, password }));
-      toast.dismiss('cold-start');
+      // Wait until Render server is awake before sending the request.
+      // This prevents Render's 15-second cold-start drop from hitting
+      // the actual register endpoint.
+      await waitUntilReady();
+      toast.loading('Creating your account…', { id: toastId });
+
+      await authService.register({ name, email, password });
+      toast.dismiss(toastId);
       toast.success('Account created! Please verify your email with the OTP sent.');
       return { success: true };
     } catch (err) {
-      toast.dismiss('cold-start');
+      toast.dismiss(toastId);
       toast.error(err.message || 'Registration failed');
       return { success: false, error: err.message };
     } finally {

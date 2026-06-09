@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from 'react-icons/hi';
 import { useAuthContext } from '../../context/AuthContext';
 import { validateLogin, hasErrors } from '../../utils/validators';
+import { isServerReady, getWakeElapsed } from '../../services/serverHealth';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 
@@ -12,6 +13,18 @@ const Login = () => {
   const [form, setForm]     = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [showPwd, setShowPwd] = useState(false);
+  const [serverReady, setServerReady] = useState(isServerReady());
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (serverReady) return;
+    const interval = setInterval(() => {
+      const ready = isServerReady();
+      setElapsed(getWakeElapsed());
+      if (ready) { setServerReady(true); clearInterval(interval); }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [serverReady]);
 
   const set = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }));
 
@@ -29,6 +42,21 @@ const Login = () => {
 
   return (
     <div>
+      {/* ── Server wake-up banner ── */}
+      {!serverReady && (
+        <div style={{ background: 'linear-gradient(135deg,#f59e0b22,#f59e0b11)', border: '1px solid #f59e0b55', borderRadius: 12, padding: '12px 16px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '2px solid #f59e0b44', borderTop: '2px solid #f59e0b', animation: 'spin 1s linear infinite', flexShrink: 0 }} />
+          <div>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#d97706' }}>Server is waking up… ({elapsed}s)</p>
+            <p style={{ margin: 0, fontSize: 12, color: '#92400e', marginTop: 2 }}>Free-tier servers sleep when idle. This takes up to 60 seconds.</p>
+          </div>
+        </div>
+      )}
+      {serverReady && elapsed > 0 && (
+        <div style={{ background: '#d1fae522', border: '1px solid #10b98155', borderRadius: 12, padding: '10px 16px', marginBottom: 24, fontSize: 13, color: '#065f46', fontWeight: 600 }}>✅ Server is ready!</div>
+      )}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
       <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>Welcome back 👋</h2>
       <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 28 }}>
         Sign in to your TechVault account

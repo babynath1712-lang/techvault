@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './index.css';
-import { warmUpServer } from './services/api';
+import { initServerWarmUp } from './services/serverHealth';
 
-// Ping backend immediately on app load so Render wakes up
-// before the user tries to register/login
-warmUpServer();
+// Start polling /api/health immediately on page load.
+// This gives Render's free-tier server time to wake up BEFORE
+// the user submits any form — preventing cold-start timeouts.
+initServerWarmUp();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
