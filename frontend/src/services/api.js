@@ -1,14 +1,17 @@
 import axios from 'axios';
 
-// In production: use deployed backend URL (set via VITE_API_URL env var)
-// In development: use Vite proxy → '/api' → http://localhost:5000
-const BASE_URL = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api`
+// Production backend URL — hardcoded so it never depends on Vercel env vars
+const PROD_BACKEND = 'https://techvault-qm2w.onrender.com';
+
+// In production builds: go directly to Render backend
+// In local dev: use Vite proxy → '/api' → http://localhost:5000
+const BASE_URL = import.meta.env.PROD
+  ? `${PROD_BACKEND}/api`
   : '/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,  // 15s for normal requests — server must be awake before we call
+  timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
 

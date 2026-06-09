@@ -7,8 +7,11 @@
  */
 import axios from 'axios';
 
-const BACKEND = import.meta.env.VITE_API_URL; // undefined in local dev
-const HEALTH_URL = BACKEND ? `${BACKEND}/api/health` : null;
+// Production backend URL — same as api.js, hardcoded for reliability
+const PROD_BACKEND = 'https://techvault-qm2w.onrender.com';
+const IS_PROD = import.meta.env.PROD;
+
+const HEALTH_URL = IS_PROD ? `${PROD_BACKEND}/api/health` : null;
 
 const POLL_INTERVAL_MS = 3000;   // check every 3 seconds
 const MAX_WAIT_MS      = 90000;  // give up after 90 seconds
@@ -19,8 +22,8 @@ let _startTime    = null;
 
 // Called once from main.jsx on app load
 export const initServerWarmUp = () => {
-  if (!HEALTH_URL) {
-    // Local dev — backend is always running
+  if (!IS_PROD) {
+    // Local dev — backend is always running via Vite proxy
     _isReady = true;
     _readyPromise = Promise.resolve();
     return;
@@ -50,7 +53,6 @@ export const initServerWarmUp = () => {
 // Returns true immediately if already awake, otherwise waits
 export const waitUntilReady = () => {
   if (!_readyPromise) {
-    // initServerWarmUp wasn't called yet — start now
     initServerWarmUp();
   }
   return _readyPromise;
