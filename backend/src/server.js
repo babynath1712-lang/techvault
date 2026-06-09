@@ -5,6 +5,24 @@ const { verifyMailConnection } = require('./config/mail');
 
 const PORT = process.env.PORT || 5000;
 
+// ─── Keep-Alive ping to prevent Render free-tier from sleeping ────
+// Render sleeps after 15 min of inactivity — ping every 14 min to stay warm
+const keepAlive = () => {
+  const BACKEND_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+  setInterval(async () => {
+    try {
+      const http = BACKEND_URL.startsWith('https') ? require('https') : require('http');
+      http.get(`${BACKEND_URL}/api/health`, (res) => {
+        console.log(`🏓 Keep-alive ping → ${res.statusCode}`);
+      }).on('error', (e) => {
+        console.warn(`⚠️  Keep-alive ping failed: ${e.message}`);
+      });
+    } catch (e) {
+      console.warn('⚠️  Keep-alive skipped:', e.message);
+    }
+  }, 14 * 60 * 1000); // every 14 minutes
+};
+
 // ─── Start Server ─────────────────────────────────────────────────
 const startServer = async () => {
   try {
@@ -33,6 +51,9 @@ const startServer = async () => {
       console.log('║    GET   /api/admin/dashboard            ║');
       console.log('╚══════════════════════════════════════════╝');
       console.log('');
+
+      // Start keep-alive pings only in production
+      if (process.env.NODE_ENV === 'production') keepAlive();
     });
 
     // 4. Graceful shutdown handlers

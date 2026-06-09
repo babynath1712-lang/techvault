@@ -2,8 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import toast from 'react-hot-toast';
-
-const DEMO_OTP = '123456'; // mock OTP for demo
+import { authService } from '../../services/authService';
 
 const VerifyOTP = () => {
   const navigate  = useNavigate();
@@ -11,6 +10,7 @@ const VerifyOTP = () => {
   const email     = location.state?.email || '';
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const inputs = useRef([]);
 
   const handleChange = (i, val) => {
@@ -29,27 +29,39 @@ const VerifyOTP = () => {
     e.preventDefault();
     const code = otp.join('');
     if (code.length !== 6) { toast.error('Enter the 6-digit OTP'); return; }
+    if (!email) { toast.error('Email not found. Please register again.'); return; }
+
     setLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-    if (code !== DEMO_OTP) {
-      toast.error(`Wrong OTP. Demo code is: ${DEMO_OTP}`);
+    try {
+      await authService.verifyOTP({ email, otp_code: code, purpose: 'email_verification' });
+      toast.success('Email verified successfully! ✅');
+      navigate('/login', { replace: true });
+    } catch (err) {
+      toast.error(err.message || 'Invalid or expired OTP. Please try again.');
+    } finally {
       setLoading(false);
-      return;
     }
-    toast.success('OTP verified! ✅');
-    navigate('/reset-password', { state: { email, otp: code } });
-    setLoading(false);
   };
 
-  const handleResend = () => {
-    toast.success(`OTP resent! Use code: ${DEMO_OTP}`);
-    setOtp(['', '', '', '', '', '']);
+  const handleResend = async () => {
+    if (!email) { toast.error('Email not found. Please register again.'); return; }
+    setResending(true);
+    try {
+      await authService.resendOTP({ email, purpose: 'email_verification' });
+      toast.success('OTP resent! Check your email.');
+      setOtp(['', '', '', '', '', '']);
+      inputs.current[0]?.focus();
+    } catch (err) {
+      toast.error(err.message || 'Failed to resend OTP. Try again.');
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{ fontSize: 52, marginBottom: 16 }}>🔐</div>
-      <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>Enter OTP</h2>
+      <h2 style={{ fontSize: 26, fontWeight: 800, marginBottom: 8 }}>Verify Your Email</h2>
       <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8 }}>
         We sent a 6-digit code to
       </p>
@@ -82,8 +94,13 @@ const VerifyOTP = () => {
 
         <p style={{ marginTop: 20, fontSize: 13, color: 'var(--text-secondary)' }}>
           Didn't receive?{' '}
-          <button type="button" onClick={handleResend} style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'inherit', fontSize: 13 }}>
-            Resend OTP
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={resending}
+            style={{ color: 'var(--primary)', fontWeight: 700, cursor: 'pointer', background: 'none', border: 'none', fontFamily: 'inherit', fontSize: 13, opacity: resending ? 0.6 : 1 }}
+          >
+            {resending ? 'Sending…' : 'Resend OTP'}
           </button>
         </p>
       </form>
